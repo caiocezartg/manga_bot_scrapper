@@ -7,7 +7,7 @@ export async function tenPopularMangasCommand(message) {
   let botMessageOfArrayPopularMangas =
     "🌟 <b>Top 10 Mangás Mais Lidos</b> 🌟 \n\n\n";
 
-  if (!arrayTenPopularMangas) {
+  if (arrayTenPopularMangas.error) {
     bot.sendMessage(
       message.chat.id,
       "Não foi possível obter o top 10 mangás mais lidos, tente novamente mais tarde."

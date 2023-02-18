@@ -4,41 +4,38 @@ import { transformScore } from "../utils/transformScore.js";
 
 export async function mangaCommand(message, name) {
   const chatId = message.chat.id;
-  const mangas = await mangaController(name);
+  let manga = await mangaController(name);
 
-  if (mangas.error) {
-    return bot.sendMessage(chatId, mangas.error);
+  if (manga.error) {
+    return bot.sendMessage(chatId, manga.error);
   }
 
   const options = {
     reply_to_message_id: message.message_id,
+    parse_mode: "HTML",
     reply_markup: JSON.stringify({
-      inline_keyboard: mangas.map((manga, index) => [
-        {
-          text: manga.name,
-          callback_data: index,
-        },
-      ]),
+      inline_keyboard: [
+        [{ text: "📖 Leia os capítulos", callback_data: manga.id_serie }],
+      ],
     }),
   };
 
-  bot.sendMessage(chatId, "Selecione um mangá", options);
+  bot.sendPhoto(chatId, manga.poster);
+
+  bot.sendMessage(
+    chatId,
+    `<b>Nome:</b> ${manga.name} \n` +
+      `<b>Autor:</b> ${manga.author} \n` +
+      `<b>Artista:</b> ${manga.artist} \n` +
+      `<b>Categorias:</b> ${manga.categories} \n` +
+      `<b>Descrição:</b> ${manga.description} \n` +
+      `<b>Número de Capítulos:</b> ${manga.chapters_count} \n` +
+      `<b>Nota:</b> ${transformScore(manga.score)} \n` +
+      `<b>Link do mangá:</b> ${manga.link} \n`,
+    options
+  );
 
   bot.on("callback_query", (callbackQuery) => {
-    const index = Number(callbackQuery.data);
-
-    bot.sendPhoto(chatId, mangas[index].poster);
-    bot.sendMessage(
-      chatId,
-      `<b>Nome:</b> ${mangas[index].name} \n` +
-        `<b>Autor:</b> ${mangas[index].author} \n` +
-        `<b>Categorias:</b> ${mangas[index].categories} \n` +
-        `<b>Descrição:</b> ${mangas[index].description} \n` +
-        `<b>Artista:</b> ${mangas[index].artist} \n` +
-        `<b>Número de Capítulos:</b> ${mangas[index].chapters_count} \n` +
-        `<b>Nota:</b> ${transformScore(mangas[index].score)} \n` +
-        `<b>Link para o website:</b> ${mangas[index].link}`,
-      { parse_mode: "HTML" }
-    );
+    console.log(callbackQuery);
   });
 }

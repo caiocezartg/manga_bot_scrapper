@@ -1,21 +1,22 @@
+import { getChaptersController } from "../controllers/getChaptersController.js";
 import { mangaController } from "../controllers/mangaController.js";
 import { bot } from "../lib/bot.js";
 import { transformScore } from "../utils/transformScore.js";
 
 export async function mangaCommand(message, name) {
-  const chatId = message.chat.id;
-  let manga = await mangaController(name);
+  let chatId = message.chat.id;
+  let messageId = message.message_id;
+  const manga = await mangaController(name);
 
   if (manga.error) {
     return bot.sendMessage(chatId, manga.error);
   }
 
   const options = {
-    reply_to_message_id: message.message_id,
     parse_mode: "HTML",
     reply_markup: JSON.stringify({
       inline_keyboard: [
-        [{ text: "📖 Leia os capítulos", callback_data: manga.id_serie }],
+        [{ text: "📖 Leia os capítulos", callback_data: "first_page" }],
       ],
     }),
   };
@@ -35,7 +36,61 @@ export async function mangaCommand(message, name) {
     options
   );
 
-  bot.on("callback_query", (callbackQuery) => {
-    console.log(callbackQuery);
+  bot.removeListener("callback_query");
+
+  bot.on("callback_query", async (callbackQuery) => {
+    const action = callbackQuery.data;
+    let setupInlineKeyboard = {};
+
+    if (action === "first_page") {
+      chaptersPage = 1;
+    }
+
+    if (action === "next_page") {
+      chaptersPage++;
+    }
+
+    if (action === "previous_page") {
+      chaptersPage === 1 ? chaptersPage : chaptersPage--;
+    }
+
+    setupInlineKeyboard = await inlineKeyboardChapters(
+      manga.id_serie,
+      messageId,
+      chaptersPage
+    );
+
+    bot.sendMessage(chatId, "Selecione um capitulo", setupInlineKeyboard);
   });
+}
+
+let chaptersPage = 1;
+
+async function inlineKeyboardChapters(id_serie, message_id, page) {
+  let idReleaseManga = id_serie;
+  let arrayChaptersManga = [];
+
+  arrayChaptersManga = await getChaptersController(idReleaseManga, page);
+
+  let buttonsChaptersManga = arrayChaptersManga.map((chapter) => {
+    return [
+      {
+        text: `#${chapter.number} - ${chapter.chapter_name}`,
+        callback_data: "1",
+      },
+    ];
+  });
+
+  buttonsChaptersManga.push([
+    { text: "Página anterior", callback_data: "previous_page" },
+    { text: "Próxima página", callback_data: "next_page" },
+  ]);
+
+  let optionsChapters = {
+    reply_markup: JSON.stringify({
+      inline_keyboard: buttonsChaptersManga,
+    }),
+  };
+
+  return optionsChapters;
 }

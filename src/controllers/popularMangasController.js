@@ -1,6 +1,6 @@
 import { api } from "../lib/axios.js";
 
-export class tenPopularMangasController {
+export class popularMangasController {
   async execute() {
     let arrayTenPopularMangas = [];
 

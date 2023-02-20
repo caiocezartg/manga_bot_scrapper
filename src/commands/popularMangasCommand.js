@@ -1,9 +1,9 @@
-import { tenPopularMangasController } from "../controllers/tenPopularMangasController.js";
+import { popularMangasController } from "../controllers/popularMangasController.js";
 import { bot } from "../lib/bot.js";
 
-export async function tenPopularMangasCommand(message) {
-  const popularMangasController = new tenPopularMangasController();
-  const arrayTenPopularMangas = await popularMangasController.execute();
+export async function popularMangasCommand(message) {
+  const popularMangas = new popularMangasController();
+  const arrayTenPopularMangas = await popularMangas.execute();
   let botMessageOfArrayPopularMangas =
     "🌟 <b>Top 10 Mangás Mais Lidos</b> 🌟 \n\n\n";
 

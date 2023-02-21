@@ -1,7 +1,7 @@
 import { api } from "../lib/axios.js";
 
 export async function getChaptersController(manga_id, page) {
-  // let chapters = [];
+  let chapters = [];
 
   try {
     const response = await api.get(
@@ -12,17 +12,17 @@ export async function getChaptersController(manga_id, page) {
 
     if (chaptersResponse) {
       chaptersResponse.map((chapter) => {
-        return {
+        chapters.push({
           chapter_name: chapter.chapter_name,
           number: chapter.number,
           date: chapter.date,
           id_release:
             chapter.releases[Object.keys(chapter.releases)[0]].id_release,
-        };
+        });
       });
     }
 
-    return chaptersResponse;
+    return chapters;
   } catch (error) {
     console.log(error);
   }

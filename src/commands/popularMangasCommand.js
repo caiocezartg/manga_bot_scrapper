@@ -2,19 +2,18 @@ import { popularMangasController } from "../controllers/popularMangasController.
 import { bot } from "../lib/bot.js";
 
 export async function popularMangasCommand(message) {
-  const popularMangas = new popularMangasController();
-  const arrayTenPopularMangas = await popularMangas.execute();
+  const arrayPopularMangas = await popularMangasController();
   let botMessageOfArrayPopularMangas =
     "🌟 <b>Top 10 Mangás Mais Lidos</b> 🌟 \n\n\n";
 
-  if (arrayTenPopularMangas.error) {
+  if (arrayPopularMangas.error) {
     bot.sendMessage(
       message.chat.id,
       "Não foi possível obter o top 10 mangás mais lidos, tente novamente mais tarde."
     );
   }
 
-  arrayTenPopularMangas.forEach((manga, index) => {
+  arrayPopularMangas.forEach((manga, index) => {
     botMessageOfArrayPopularMangas += `<b>#${index + 1}</b> ${
       manga.manga_name
     }: ${manga.manga_link} \n`;

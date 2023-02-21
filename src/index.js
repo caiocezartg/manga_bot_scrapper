@@ -1,5 +1,5 @@
 import { logCommand } from "./commands/logCommand.js";
-import { mangaCommand } from "./commands/mangaCommand.js";
+import { searchMangaCommand } from "./commands/searchMangaCommand.js";
 import { popularMangasCommand } from "./commands/popularMangasCommand.js";
 import { bot } from "./lib/bot.js";
 
@@ -9,5 +9,5 @@ bot.onText(/\/popular/, async (msg) => await popularMangasCommand(msg));
 
 bot.onText(
   /\/manga (.+)/,
-  async (msg, match) => await mangaCommand(msg, match[1])
+  async (msg, match) => await searchMangaCommand(msg, match[1])
 );

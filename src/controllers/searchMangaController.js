@@ -1,8 +1,8 @@
 import { api } from "../lib/axios.js";
 import puppeteer from "puppeteer";
 
-export async function mangaController(name) {
-  let manga = {};
+export async function searchMangaController(name) {
+  let mangas = [];
 
   try {
     const response = await api.post(
@@ -12,30 +12,37 @@ export async function mangaController(name) {
       })
     );
 
-    const mangaDetails = response.data.series[0];
+    const arrayMangas = response.data.series;
 
-    if (!mangaDetails) {
+    if (!arrayMangas) {
       return {
         error: "Não foi possível encontrar o(s) mangá(s)",
       };
     }
 
-    manga.id_serie = mangaDetails.id_serie;
-    manga.name = mangaDetails.name;
-    manga.score = mangaDetails.score;
-    manga.author = mangaDetails.author;
-    manga.artist = mangaDetails.artist;
-    manga.categories = mangaDetails.categories.map((category) => category.name);
-    manga.poster = mangaDetails.cover;
-    manga.link = `https://mangalivre.net${mangaDetails.link}`;
-    manga.description = await scrap(mangaDetails.id_serie, "description");
-    manga.chapters_count = await scrap(mangaDetails.id_serie, "count");
+    mangas = await Promise.all(
+      arrayMangas.map(async (manga) => {
+        return {
+          id_serie: manga.id_serie,
+          name: manga.name,
+          score: manga.score,
+          author: manga.author,
+          artist: manga.artist,
+          categories: manga.categories.map((category) => category.name),
+          poster: manga.cover,
+          link: `https://mangalivre.net${manga.link}`,
+          description: await scrap(manga.id_serie, "description"),
+          chapters_count: await scrap(manga.id_serie, "count"),
+        };
+      })
+    );
   } catch (error) {
     return {
       error: "Não foi possível executar este comando.",
     };
   }
-  return manga;
+
+  return mangas;
 }
 
 async function scrap(manga_id, info) {

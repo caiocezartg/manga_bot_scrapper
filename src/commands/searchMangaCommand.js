@@ -1,7 +1,10 @@
+import { getChapterPagesController } from "../controllers/getChapterPagesController.js";
 import { getChaptersController } from "../controllers/getChaptersController.js";
 import { searchMangaController } from "../controllers/searchMangaController.js";
 import { bot } from "../lib/bot.js";
 import { transformScore } from "../utils/transformScore.js";
+import PDFDocument from "pdfkit";
+import fs from "fs";
 
 let chaptersPage = 1;
 let indexMangaSelected = 0;
@@ -21,7 +24,7 @@ export async function searchMangaCommand(message, name) {
       inline_keyboard: mangas.map((manga, index) => [
         {
           text: manga.name,
-          callback_data: index,
+          callback_data: `get_manga_details ${index}`,
         },
       ]),
     }),
@@ -33,14 +36,13 @@ export async function searchMangaCommand(message, name) {
 
   bot.on("callback_query", async (query) => {
     const action = query.data;
-    const arrayPossibleActions = ["first_page", "next_page", "previous_page"];
 
-    console.log(action);
+    console.log(query.data);
 
-    if (!arrayPossibleActions.includes(action)) {
-      indexMangaSelected = query.data;
+    if (action.startsWith("get_manga_details")) {
+      indexMangaSelected = action.split(" ")[1];
 
-      bot.sendPhoto(chatId, mangas[query.data].poster);
+      bot.sendPhoto(chatId, mangas[indexMangaSelected].poster);
       bot.sendMessage(
         chatId,
         `<b>Nome:</b> ${mangas[indexMangaSelected].name} \n` +
@@ -64,7 +66,7 @@ export async function searchMangaCommand(message, name) {
       );
     }
 
-    if (action === arrayPossibleActions[0]) {
+    if (action === "first_page") {
       chaptersPage = 1;
       bot.sendMessage(chatId, "Selecione um capitulo", {
         reply_to_message_id: messageId,
@@ -77,14 +79,34 @@ export async function searchMangaCommand(message, name) {
       });
     }
 
-    if (action === arrayPossibleActions[1]) {
+    if (action === "next_page") {
       chaptersPage++;
       changePageChapters(mangas[indexMangaSelected].id_serie, query);
     }
 
-    if (action === arrayPossibleActions[2] && chaptersPage > 1) {
+    if (action === "previous_page" && chaptersPage > 1) {
       chaptersPage--;
       changePageChapters(mangas[indexMangaSelected].id_serie, query);
+    }
+
+    if (action.startsWith("get_pages")) {
+      const chapterIdRelease = query.data.split(" ")[1];
+      // let stream = await getChapterPagesController(chapterIdRelease);
+
+      const doc = new PDFDocument();
+      doc.text("Este é um PDF simples criado com pdfkit");
+      const buffers = [];
+      doc.on("data", buffers.push.bind(buffers));
+      doc.on("end", () => {
+        let pdfData = Buffer.concat(buffers);
+        console.log(pdfData);
+        bot.sendDocument(chatId, pdfData);
+      });
+
+      // arrayChapterPages.forEach((page) => {
+      //   let photoUrl = page.image_url;
+      //   bot.sendPhoto(chatId, photoUrl, { caption: page.index });
+      // });
     }
   });
 }
@@ -101,7 +123,7 @@ async function inlineKeyboardChapters(id_serie, page) {
         text: `#${chapter.number} - ${chapter.chapter_name || "Sem nome"} | ${
           chapter.date
         }`,
-        callback_data: chapter.id_release,
+        callback_data: `get_pages ${chapter.id_release}`,
       },
     ];
   });
